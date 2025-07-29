@@ -18,7 +18,7 @@ closedrequests_failedrespond_3 <- read_xlsx("./rawdata/3_ecosoc_closedrequests_f
 application_withdrawn_4 <- read_xlsx("./rawdata/4_ecosoc_application_withdrawn.xlsx")
 status_declined_5 <- read_xlsx("./rawdata/5_ecosoc_status_declined.xlsx")
 status_withdrawn_ownrequest_6 <- read_xlsx("./rawdata/6_ecosoc_status_withdrawn_ownrequest.xlsx")
-applications_deferred_7 <- read_xlsx("./rawdata/7_applications_deferred.xlsx")
+applications_deferred_7 <- read_xlsx("./rawdata/7_applications_deferred.xlsx", col_types = c("guess","guess", "text"))
 roll_call_votes_8 <- read_xlsx("./rawdata/8_roll_call_votes.xlsx")
 newapplications_status_directly_granted_9 <- read_xlsx("./rawdata/9_newapplications_status_directly_granted.xlsx")
 newapplications_deferred_10 <- read_xlsx("./rawdata/10_newapplications_deferred.xlsx")
@@ -41,5 +41,7 @@ mergers_organizations_12$session_date <- as.Date(mergers_organizations_12$Sessio
 
 # Prepare roll call votes data
 roll_call_votes_8 <- roll_call_votes_8 %>%
-  fill(Vote_outcome, session_date, Session_number, .direction = "down")
+  fill(Vote_outcome, session_date, Session_number, Vote_topic, .direction = "down")
 
+# Prepare additional columns
+status_withdrawn_ownrequest_6 <- status_withdrawn_ownrequest_6 %>% rename(info = ...3)
