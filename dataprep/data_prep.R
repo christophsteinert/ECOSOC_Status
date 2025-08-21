@@ -1,4 +1,4 @@
-#### Data analysis ECOSOC NGO project
+#### Data prep ECOSOC NGO project
 
 # Load packages
 library(tidyverse)
@@ -45,3 +45,19 @@ roll_call_votes_8 <- roll_call_votes_8 %>%
 
 # Prepare additional columns
 status_withdrawn_ownrequest_6 <- status_withdrawn_ownrequest_6 %>% rename(info = ...3)
+
+# Save for data analysis
+save(status_granted_1, file = "./cleandata/status_granted_1.RData")
+save(name_changes_2, file = "./cleandata/name_changes_2.RData")
+save(closedrequests_failedrespond_3, file = "./cleandata/closedrequests_failedrespond_3.RData")
+save(application_withdrawn_4, file = "./cleandata/application_withdrawn_4.RData")
+save(status_declined_5, file = "./cleandata/status_declined_5.RData")
+save(status_withdrawn_ownrequest_6, file = "./cleandata/status_withdrawn_ownrequest_6.RData")
+save(applications_deferred_7, file = "./cleandata/applications_deferred_7.RData")
+save(roll_call_votes_8, file = "./cleandata/roll_call_votes_8.RData")
+save(newapplications_status_directly_granted_9, file = "./cleandata/newapplications_status_directly_granted_9.RData")
+save(newapplications_deferred_10, file = "./cleandata/newapplications_deferred_10.RData")
+save(deferred_status_reclassification_11, file = "./cleandata/deferred_status_reclassification_11.RData")
+save(mergers_organizations_12, file = "./cleandata/mergers_organizations_12.RData")
+
+
