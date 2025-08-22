@@ -183,6 +183,7 @@ ggplot(roll_call_votes_8_gp, aes(x = session_date, y = n_votes)) +
     limits = c(0, 10)
   ) 
 ### Status directly granted
+newapplications_status_directly_granted_9_gp <- newapplications_status_directly_granted_9_gp %>% filter(session_date > as.Date("2010-01-01"))
 ggplot(newapplications_status_directly_granted_9_gp, aes(x = session_date, y = directgrant)) +
   geom_line() +
   geom_point() +
@@ -249,3 +250,31 @@ ggplot(mergers_organizations_12_gp, aes(x = session_date, y = mergers)) +
     breaks = seq(0, 5, by = 1),
     limits = c(0, 5)
   ) 
+
+
+#### Check proportion of deferred to status granted
+combined_deferred_granted <- merge(status_granted_1_gp, application_deferred_7_gp, by = "session_date", all.x = T, all.y = T)
+combined_deferred_granted <- combined_deferred_granted[!is.na(combined_deferred_granted$session_date),]
+combined_deferred_granted$defgrant_ratio <- (combined_deferred_granted$deferred / combined_deferred_granted$count_granted)
+# Plot
+ggplot(combined_deferred_granted, aes(x = session_date, y = defgrant_ratio)) +
+  geom_line() +
+  geom_point() +
+  geom_smooth(method = "loess", se = TRUE, color = "blue", linetype = "dashed") +
+  geom_hline(yintercept = 1.0, linetype = "dotted", color = "red", size = 1) +
+  labs(title = "NGO Applications Deferred to Granted Ratio", x = "", y = "Deferred ÷ Granted") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+        axis.title = element_text(face = "bold"),
+        axis.title.x = element_text(size = 16, face = "bold"),
+        axis.title.y = element_text(size = 16, face = "bold"),
+        axis.text     = element_text(size = 16)) +
+  scale_x_date(
+    date_breaks = "2 years",
+    date_labels = "%Y"
+  ) +
+  scale_y_continuous(
+    breaks = seq(0, 3, by = 0.5),
+    limits = c(0, 3)
+  ) 
+
