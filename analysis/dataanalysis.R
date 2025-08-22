@@ -353,43 +353,83 @@ granted_counts <-  status_granted_1  %>%
 
 #### Check overlap structures ####
 
-# Example session: Focus on session 2023-06-05
-examp_status_granted_1 <- status_granted_1 %>% filter(Session_number == as.Date("2023-06-05"))
-examp_status_directlygranted_9 <- newapplications_status_directly_granted_9 %>% filter(Session_number == as.Date("2023-06-05"))
-## These are the organizations whose status was directly granted
-examp_direct <- inner_join(examp_status_granted_1, examp_status_directlygranted_9, by = "NGO_name")
-## These are the organizations whose status was granted but not directly
-examp_notdirect <- anti_join(examp_status_granted_1, examp_status_directlygranted_9, by = "NGO_name")
-## Only in directly granted --> potential mistakes
-examp_mustbeempty <- anti_join(examp_status_directlygranted_9, examp_status_granted_1, by = "NGO_name")
-## Get rid of these exemplary objects
-rm(examp_status_granted_1, examp_status_directlygranted_9, examp_direct, examp_notdirect, examp_mustbeempty)
-
-# Check which ones are both in status granted (1) and status directly granted (9)
+#### Status granted multiples
 dim(status_granted_1)
 dim(newapplications_status_directly_granted_9)
-over_directgrant <- inner_join(status_granted_1, newapplications_status_directly_granted_9, by = "NGO_name")
-## Association of African Entrepreneurs is twice in directly granted
-## Women in Politics Form is twice in status_granted
+## Many organizations appear multiple times --> for the purpose of exploring overlap, I get rid of duplicates
+nodup_status_granted_1 <- status_granted_1[!duplicated(status_granted_1$NGO_name),]
+nodup_newapplications_status_directly_granted_9 <- newapplications_status_directly_granted_9[!duplicated(newapplications_status_directly_granted_9$NGO_name),]
+
+# Check which ones are both in status granted (1) and status directly granted (9)
+over_directgrant <- inner_join(nodup_status_granted_1, nodup_newapplications_status_directly_granted_9, by = "NGO_name")
 dim(over_directgrant)
 
 # Check which ones are in status granted (1) but not in directly granted (9)
-notdirect <- anti_join(status_granted_1, newapplications_status_directly_granted_9, by = "NGO_name")
+notdirect <- anti_join(nodup_status_granted_1, nodup_newapplications_status_directly_granted_9, by = "NGO_name")
+dim(notdirect)
 # --> these are the ones that eventually get ecosco status but not directly
 
 # Check which ones are in directly granted (9) but not in granted (1)
 onlyindirect <- anti_join(newapplications_status_directly_granted_9, status_granted_1, by = "NGO_name")
-# --> these are the ones only in directly granted, potential mistakes
+dim(onlyindirect)
+# --> these are the ones only in directly granted, I will have to add them
 
-# Check which ones are both in deferred (7) and new applications deferred (10) 
+
+#### Deferrals multiple
 dim(applications_deferred_7)
 dim(newapplications_deferred_10)
-over_defer <- inner_join(applications_deferred_7, newapplications_deferred_10, by = "NGO_name")
-## Al-Aqsa Association for the Development of the Islamic Waqf (Endowment) is twice in new applications deferred
-## Women in Politics Form is twice in status_granted
+## Many organizations appear multiple times --> for the purpose of exploring overlap, I get rid of duplicates
+nodup_applications_deferred_7 <- applications_deferred_7[!duplicated(applications_deferred_7$NGO_name),]
+nodup_newapplications_deferred_10 <- newapplications_deferred_10[!duplicated(newapplications_deferred_10$NGO_name), ]
+
+# Check which ones are both in deferred (7) and new applications deferred (10) 
+over_defer <- inner_join(nodup_applications_deferred_7, nodup_newapplications_deferred_10, by = "NGO_name")
 dim(over_defer)
+# --> this clearly suggests that the new deferrals are generally also in deferrals
+
+# Check which ones are in deferred (7) but not in new applications deferred (10)
+olddeferred <- anti_join(nodup_applications_deferred_7, nodup_newapplications_deferred_10, by = "NGO_name")
+dim(olddeferred)
+# --> these are the ones that are multiple times deferred
+
+# Check which ones are in new applications deferred (10) but not in deferred (7)
+onlynewdefer <- anti_join(nodup_newapplications_deferred_10, nodup_applications_deferred_7,  by = "NGO_name")
+dim(onlynewdefer)
+# --> these are the ones that appear only in newapplications deferred: I will need to add them to the analysis data frame
 
 
+#### Status granted (1) and deferral (7) 
+dim(nodup_status_granted_1)
+dim(nodup_applications_deferred_7)
+
+# Check which ones are both in status granted (1) and deferred (7) 
+eventualgrant <- inner_join(nodup_status_granted_1, nodup_applications_deferred_7, by = "NGO_name")
+dim(eventualgrant)
+
+# Check which ones are only granted and never deferred
+directgrant <- anti_join(nodup_status_granted_1, nodup_applications_deferred_7, by = "NGO_name")
+dim(directgrant)
+
+# Check which ones are only deferred and never granted
+alwaysdefer <- anti_join(nodup_applications_deferred_7, nodup_status_granted_1, by ="NGO_name")
+dim(alwaysdefer)
+
+
+#### Create complete datasets of deferrals and granted ####
+
+# Filter granted that are not in (1)
+missing_granted <- newapplications_status_directly_granted_9[newapplications_status_directly_granted_9$NGO_name %in% onlyindirect$NGO_name, ]
+any(missing_granted$NGO_name %in% status_granted_1$NGO_name)
+
+# Filter deferrals that are not in (7)
+missing_deferrals <- newapplications_deferred_10[newapplications_deferred_10$NGO_name %in% onlynewdefer$NGO_name, ]
+any(missing_deferrals$NGO_name %in% applications_deferred_7$NGO_name)
+
+# Add these organizations to the respective dataframes
+status_granted_1 <- rbind(status_granted_1, missing_granted)
+missing_deferrals$info <- NA
+missing_deferrals <- missing_deferrals %>% relocate(NGO_name, Session_number, info, session_date)
+applications_deferred_7 <- rbind(applications_deferred_7, missing_deferrals)
 
 #### Create survival dataset ####
 applications_deferred_7$deferred <- 1
