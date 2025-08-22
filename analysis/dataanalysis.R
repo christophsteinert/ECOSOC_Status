@@ -51,15 +51,19 @@ mergers_organizations_12_gp <- mergers_organizations_12 %>% group_by(session_dat
   summarize(mergers = n())
 
 
-# Plot over time
+#### Plot time trends ####
 ### Status granted
 ggplot(status_granted_1_gp, aes(x = session_date, y = count_granted)) +
   geom_line() +
   geom_point() +
   geom_smooth(method = "loess", se = TRUE, color = "blue", linetype = "dashed") +
   labs(title = "ECOSOC status granted over time", x = "Date", y = "# of NGOs") +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+        axis.title = element_text(face = "bold"),
+        axis.title.x = element_text(size = 18, face = "bold"),
+        axis.title.y = element_text(size = 18, face = "bold"),
+        axis.text     = element_text(size = 18)) +
   scale_x_date(
     date_breaks = "2 years",
     date_labels = "%Y"
@@ -67,6 +71,7 @@ ggplot(status_granted_1_gp, aes(x = session_date, y = count_granted)) +
   scale_y_continuous(
     breaks = seq(0, max(status_granted_1_gp$count_granted, na.rm = TRUE), by = 50)
   )
+ggsave("./figures/granted.pdf", device = cairo_pdf, width = 297, height = 210, units = "mm")
 ## Name changes
 ggplot(name_changes_2_gp, aes(x = session_date, y = count_namechange)) +
   geom_line() +
@@ -149,11 +154,11 @@ ggplot(application_deferred_7_gp, aes(x = session_date, y = deferred)) +
   geom_smooth(method = "loess", se = TRUE, color = "blue", linetype = "dashed") +
   labs(title = "NGO Applications Deferred Over Time", x = "", y = "# of deferred NGO applications") +
   theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+  theme(plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
         axis.title = element_text(face = "bold"),
-        axis.title.x = element_text(size = 16, face = "bold"),
-        axis.title.y = element_text(size = 16, face = "bold"),
-        axis.text     = element_text(size = 16)) +
+        axis.title.x = element_text(size = 18, face = "bold"),
+        axis.title.y = element_text(size = 18, face = "bold"),
+        axis.text     = element_text(size = 18)) +
   scale_x_date(
     date_breaks = "2 years",
     date_labels = "%Y"
@@ -162,6 +167,7 @@ ggplot(application_deferred_7_gp, aes(x = session_date, y = deferred)) +
     breaks = seq(0, 300, by = 50),
     limits = c(0, 300)
   ) 
+ggsave("./figures/defertrend.pdf", device = cairo_pdf, width = 297, height = 210, units = "mm")
 ## Roll call votes
 ggplot(roll_call_votes_8_gp, aes(x = session_date, y = n_votes)) +
   geom_line() +
@@ -252,7 +258,7 @@ ggplot(mergers_organizations_12_gp, aes(x = session_date, y = mergers)) +
   ) 
 
 
-#### Check proportion of deferred to status granted
+#### Check proportion of deferred to status granted ####
 combined_deferred_granted <- merge(status_granted_1_gp, application_deferred_7_gp, by = "session_date", all.x = T, all.y = T)
 combined_deferred_granted <- combined_deferred_granted[!is.na(combined_deferred_granted$session_date),]
 combined_deferred_granted$defgrant_ratio <- (combined_deferred_granted$deferred / combined_deferred_granted$count_granted)
@@ -263,12 +269,12 @@ ggplot(combined_deferred_granted, aes(x = session_date, y = defgrant_ratio)) +
   geom_smooth(method = "loess", se = TRUE, color = "blue", linetype = "dashed") +
   geom_hline(yintercept = 1.0, linetype = "dotted", color = "red", size = 1) +
   labs(title = "NGO Applications Deferred to Granted Ratio", x = "", y = "Deferred ÷ Granted") +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
         axis.title = element_text(face = "bold"),
-        axis.title.x = element_text(size = 16, face = "bold"),
-        axis.title.y = element_text(size = 16, face = "bold"),
-        axis.text     = element_text(size = 16)) +
+        axis.title.x = element_text(size = 18, face = "bold"),
+        axis.title.y = element_text(size = 18, face = "bold"),
+        axis.text     = element_text(size = 18)) +
   scale_x_date(
     date_breaks = "2 years",
     date_labels = "%Y"
@@ -277,4 +283,122 @@ ggplot(combined_deferred_granted, aes(x = session_date, y = defgrant_ratio)) +
     breaks = seq(0, 3, by = 0.5),
     limits = c(0, 3)
   ) 
+ggsave("./figures/defgrant_ratio.pdf", device = cairo_pdf, width = 297, height = 210, units = "mm")
+
+
+#### Check proportion of new deferred and directly granted ####
+newappcombined_deferred_granted <- merge(newapplications_status_directly_granted_9_gp, newapplications_deferred_10_gp, by = "session_date", all.x = T, all.y = T)
+newappcombined_deferred_granted$defgrant_newratio <- (newappcombined_deferred_granted$deferred / newappcombined_deferred_granted$directgrant)
+newappcombined_deferred_granted <- newappcombined_deferred_granted[!is.na(newappcombined_deferred_granted$defgrant_newratio), ]
+# Plot
+ggplot(newappcombined_deferred_granted, aes(x = session_date, y = defgrant_newratio)) +
+  geom_line() +
+  geom_point() +
+  geom_smooth(method = "loess", se = TRUE, color = "blue", linetype = "dashed") +
+  geom_hline(yintercept = 1.0, linetype = "dotted", color = "red", size = 1) +
+  labs(title = "New NGO Applications Deferred to Granted Ratio", x = "", y = "Deferred ÷ Granted") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+        axis.title = element_text(face = "bold"),
+        axis.title.x = element_text(size = 18, face = "bold"),
+        axis.title.y = element_text(size = 18, face = "bold"),
+        axis.text     = element_text(size = 18)) +
+  scale_x_date(
+    date_breaks = "2 years",
+    date_labels = "%Y"
+  )
+
+#### Check number of deferrals across NGOs ####
+deferred_counts <-  applications_deferred_7  %>%
+  group_by(NGO_name) %>%
+  summarise(session_count = n_distinct(session_date)) %>%
+  arrange(desc(session_count))
+# Plot
+hist(deferred_counts$session_count,
+     main = "Distribution of Deferrals across NGO",
+     xlab = "Number of Sessions Deferred",
+     ylab = "Frequency",
+     col = "steelblue",
+     border = "white",
+     breaks = 30)
+# Check NGOs with most deferrals
+top15_ngos <- deferred_counts %>%
+  slice_max(order_by = session_count, n = 15)
+ggplot(top15_ngos, aes(x = reorder(NGO_name, session_count), y = session_count)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = "Top 15 NGOs With Most Deferrals",
+    x = "",
+    y = "# Sessions with Deferred Applications"
+  ) + theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5, size = 20, face = "bold"),
+        axis.title = element_text(face = "bold"),
+        axis.title.x = element_text(size = 18, face = "bold"),
+        axis.title.y = element_text(size = 18, face = "bold"),
+        axis.text     = element_text(size = 12)) +
+  scale_y_continuous(
+    breaks = seq(0, 30, by = 5),
+    limits = c(0, 30)
+  )
+ggsave("./figures/top15_deferralsngos.pdf", device = cairo_pdf, width = 297, height = 210, units = "mm")
+
+
+#### NGOs that were granted several times ####
+granted_counts <-  status_granted_1  %>%
+  group_by(NGO_name) %>%
+  summarise(session_count = n_distinct(session_date)) %>%
+  arrange(desc(session_count))
+
+
+#### Check overlap structures ####
+
+# Example session: Focus on session 2023-06-05
+examp_status_granted_1 <- status_granted_1 %>% filter(Session_number == as.Date("2023-06-05"))
+examp_status_directlygranted_9 <- newapplications_status_directly_granted_9 %>% filter(Session_number == as.Date("2023-06-05"))
+## These are the organizations whose status was directly granted
+examp_direct <- inner_join(examp_status_granted_1, examp_status_directlygranted_9, by = "NGO_name")
+## These are the organizations whose status was granted but not directly
+examp_notdirect <- anti_join(examp_status_granted_1, examp_status_directlygranted_9, by = "NGO_name")
+## Only in directly granted --> potential mistakes
+examp_mustbeempty <- anti_join(examp_status_directlygranted_9, examp_status_granted_1, by = "NGO_name")
+## Get rid of these exemplary objects
+rm(examp_status_granted_1, examp_status_directlygranted_9, examp_direct, examp_notdirect, examp_mustbeempty)
+
+# Check which ones are both in status granted (1) and status directly granted (9)
+dim(status_granted_1)
+dim(newapplications_status_directly_granted_9)
+over_directgrant <- inner_join(status_granted_1, newapplications_status_directly_granted_9, by = "NGO_name")
+## Association of African Entrepreneurs is twice in directly granted
+## Women in Politics Form is twice in status_granted
+dim(over_directgrant)
+
+# Check which ones are in status granted (1) but not in directly granted (9)
+notdirect <- anti_join(status_granted_1, newapplications_status_directly_granted_9, by = "NGO_name")
+# --> these are the ones that eventually get ecosco status but not directly
+
+# Check which ones are in directly granted (9) but not in granted (1)
+onlyindirect <- anti_join(newapplications_status_directly_granted_9, status_granted_1, by = "NGO_name")
+# --> these are the ones only in directly granted, potential mistakes
+
+# Check which ones are both in deferred (7) and new applications deferred (10) 
+dim(applications_deferred_7)
+dim(newapplications_deferred_10)
+over_defer <- inner_join(applications_deferred_7, newapplications_deferred_10, by = "NGO_name")
+## Al-Aqsa Association for the Development of the Islamic Waqf (Endowment) is twice in new applications deferred
+## Women in Politics Form is twice in status_granted
+dim(over_defer)
+
+
+
+#### Create survival dataset ####
+applications_deferred_7$deferred <- 1
+applications_deferred_7$granted <- 0
+applications_deferred_7$info <- NULL
+status_granted_1$deferred <- 0
+status_granted_1$granted <- 1
+survival <- rbind(status_granted_1, applications_deferred_7)
+survival <- survival[order(survival$session_date, decreasing = TRUE), ]
+survival$rightcensored <- ifelse(survival$deferred == 1 & survival$session_date == "2024-06-14", 1, 0)
+
 
